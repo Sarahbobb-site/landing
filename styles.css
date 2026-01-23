@@ -2287,11 +2287,19 @@ body {
 }
 
 @media screen and (min-width: 1024px) {
-  .services__grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-8);
+.services__grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
   }
-}
+  }
+
+@media screen and (min-width: 1024px) {
+.services__grid--two {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 900px;
+  margin: 0 auto;
+  }
+  }
 
 .service-card {
   background: var(--white);
