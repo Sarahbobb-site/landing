@@ -96,18 +96,22 @@ document.querySelectorAll(".animate-slide-up").forEach((el) => {
 
 // ===== COUNTER ANIMATION =====
 function animateCounters() {
-  const counters = document.querySelectorAll(".stat__number")
+  const counters = document.querySelectorAll(".stat-card__number")
 
   counters.forEach((counter) => {
     const target = Number.parseInt(counter.getAttribute("data-target"))
-    const increment = target / 100
+    const increment = target / 80
     let current = 0
+
+    const easeOutQuad = (t) => t * (2 - t)
 
     const updateCounter = () => {
       if (current < target) {
         current += increment
-        counter.textContent = Math.ceil(current)
-        setTimeout(updateCounter, 20)
+        const progress = Math.min(current / target, 1)
+        const easedValue = Math.ceil(easeOutQuad(progress) * target)
+        counter.textContent = easedValue
+        setTimeout(updateCounter, 25)
       } else {
         counter.textContent = target
       }
@@ -330,95 +334,50 @@ function enhanceFloatingIcons() {
 // Initialize enhanced animations
 document.addEventListener("DOMContentLoaded", enhanceFloatingIcons)
 
-// ===== TESTIMONIALS CAROUSEL =====
-function initTestimonialsCarousel() {
-  const track = document.getElementById("testimonial-track")
-  const prevBtn = document.getElementById("prev-btn")
-  const nextBtn = document.getElementById("next-btn")
-  const indicators = document.querySelectorAll(".indicator")
+// ===== HORIZONTAL SCROLL ON SCROLL (CLIENTS) =====
+function initClientsHorizontalScroll() {
+  const section = document.querySelector(".clients")
+  const track = document.getElementById("clients-track")
+  const progressBar = document.getElementById("clients-progress")
+  const counterEl = document.getElementById("clients-current")
+  const slides = document.querySelectorAll(".client-slide")
 
-  if (!track || !prevBtn || !nextBtn) return
+  if (!section || !track || slides.length === 0) return
 
-  let currentSlide = 0
-  const totalSlides = document.querySelectorAll(".carousel-slide").length
+  const totalSlides = slides.length
 
-  function updateCarousel() {
-    const translateX = -currentSlide * 100
-    track.style.transform = `translateX(${translateX}%)`
+  function updateScroll() {
+    const rect = section.getBoundingClientRect()
+    const sectionHeight = section.offsetHeight
+    const viewportHeight = window.innerHeight
 
-    // Update indicators
-    indicators.forEach((indicator, index) => {
-      indicator.classList.toggle("active", index === currentSlide)
-    })
-  }
+    const scrolled = -rect.top
+    const maxScroll = sectionHeight - viewportHeight
 
-  function nextSlide() {
-    currentSlide = (currentSlide + 1) % totalSlides
-    updateCarousel()
-  }
+    if (maxScroll <= 0) return
 
-  function prevSlide() {
-    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides
-    updateCarousel()
-  }
+    const progress = Math.min(Math.max(scrolled / maxScroll, 0), 1)
 
-  // Event listeners
-  nextBtn.addEventListener("click", nextSlide)
-  prevBtn.addEventListener("click", prevSlide)
+    // Each slide is 100vw wide, so total translate = (totalSlides - 1) * 100vw
+    const maxTranslate = (totalSlides - 1) * window.innerWidth
+    const translateX = progress * maxTranslate
+    track.style.transform = `translateX(-${translateX}px)`
 
-  // Indicator clicks
-  indicators.forEach((indicator, index) => {
-    indicator.addEventListener("click", () => {
-      currentSlide = index
-      updateCarousel()
-    })
-  })
-
-  // Auto-play (optional)
-  let autoPlayInterval = setInterval(nextSlide, 5000)
-
-  // Pause auto-play on hover
-  const carouselContainer = document.querySelector(".carousel-container")
-  if (carouselContainer) {
-    carouselContainer.addEventListener("mouseenter", () => {
-      clearInterval(autoPlayInterval)
-    })
-
-    carouselContainer.addEventListener("mouseleave", () => {
-      autoPlayInterval = setInterval(nextSlide, 5000)
-    })
-  }
-
-  // Touch/swipe support for mobile
-  let startX = 0
-  let endX = 0
-
-  track.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX
-  })
-
-  track.addEventListener("touchend", (e) => {
-    endX = e.changedTouches[0].clientX
-    const diff = startX - endX
-
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        nextSlide()
-      } else {
-        prevSlide()
-      }
+    // Update counter
+    const currentIndex = Math.min(Math.floor(progress * totalSlides), totalSlides - 1)
+    if (counterEl) {
+      counterEl.textContent = currentIndex + 1
     }
-  })
 
-  // Keyboard navigation
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") {
-      prevSlide()
-    } else if (e.key === "ArrowRight") {
-      nextSlide()
+    // Update progress bar
+    if (progressBar) {
+      progressBar.style.width = `${progress * 100}%`
     }
-  })
+  }
+
+  window.addEventListener("scroll", updateScroll, { passive: true })
+  window.addEventListener("resize", updateScroll, { passive: true })
+  updateScroll()
 }
 
-// Initialize carousel when page loads
-document.addEventListener("DOMContentLoaded", initTestimonialsCarousel)
+document.addEventListener("DOMContentLoaded", initClientsHorizontalScroll)
